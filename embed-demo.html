@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Embed Backing Track Finder</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .demo-note { max-width: 72ch; }
+    .snippet {
+      margin: 16px 0 28px;
+      padding: 16px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg-raised);
+      color: var(--ink);
+      font: 14px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <p class="eyebrow">Embed</p>
+      <h1>Use the finder on another site</h1>
+      <p class="lede demo-note">Add this markup. The script loads the catalog from this site, draws inside a shadow root, and does not restyle the host page.</p>
+      <pre class="snippet">&lt;div id="backing-track-finder"&gt;&lt;/div&gt;
+&lt;script src="https://mkpworks.github.io/backing-track-finder/embed.js" defer&gt;&lt;/script&gt;</pre>
+      <p class="lede demo-note">Optional attributes: <code>data-theme</code> (<code>light</code> or <code>dark</code>), <code>data-accent</code> (a hex color), and <code>data-height</code> (a max height). <code>data-channel</code>, <code>data-practice</code> (or <code>data-instrument</code>), <code>data-style</code>, <code>data-key</code>, <code>data-progression</code>, <code>data-kind</code>, <code>data-omitted</code>, <code>data-duration</code>, <code>data-tempo-min</code>, <code>data-tempo-max</code>, and <code>data-quick</code> preset those filters. Any element with <code>data-backing-track-finder</code> mounts too. Call <code>BackingTrackFinder.mount(element, options)</code> for the same options in script. <strong>Open on YT Trainer</strong> stays in the same tab when this finder is embedded on ytmusictrainer.com.</p>
+    </div>
+  </header>
+  <div class="wrap">
+    <div id="backing-track-finder" data-height="720"></div>
+  </div>
+  <script src="embed.js" defer></script>
+</body>
+</html>

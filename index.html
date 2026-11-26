@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backing Track Finder</title>
+  <meta name="description" content="Backing Track Finder: practice backing tracks, drones, play-alongs, and loopers on YouTube, filtered by instrument, style, key, tempo, progression, and kind.">
+  <meta name="theme-color" content="#12100d">
+  <link rel="canonical" href="https://mkpworks.github.io/backing-track-finder/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+  <script>
+    try {
+      var savedTheme = localStorage.getItem("btf-theme");
+      if (savedTheme === "light" || savedTheme === "dark") {
+        document.documentElement.setAttribute("data-theme", savedTheme);
+      }
+    } catch (error) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#results">Skip to results</a>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <div>
+        <p class="eyebrow">YouTube practice</p>
+        <h1>Backing Track Finder</h1>
+        <p class="lede" id="summary">Practice backing tracks, drones, play-alongs, and loopers on YouTube.</p>
+        <p id="sample-banner" class="banner" hidden>Sample catalog — about 15 public videos, with illustrative practice tags. The researched list replaces this data.</p>
+        <dl class="stats" id="stats"></dl>
+      </div>
+      <button type="button" class="btn" id="theme" data-action="theme">Light theme</button>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="panel" aria-labelledby="browse-heading">
+      <div class="panel-head">
+        <h2 id="browse-heading">Browse</h2>
+        <div class="modes" role="group" aria-label="Browse mode">
+          <button type="button" data-action="mode" data-mode="channel" aria-pressed="true">Browse by channel</button>
+          <button type="button" data-action="mode" data-mode="style" aria-pressed="false">Style</button>
+          <button type="button" data-action="mode" data-mode="kind" aria-pressed="false">Kind</button>
+          <button type="button" data-action="mode" data-mode="key" aria-pressed="false">Key</button>
+          <button type="button" data-action="mode" data-mode="progression" aria-pressed="false">Progression</button>
+          <button type="button" data-action="mode" data-mode="list" aria-pressed="false">All tracks</button>
+        </div>
+      </div>
+      <div class="quick" id="quick" role="group" aria-label="Quick filters">
+        <button type="button" data-action="quick" data-quick="guitar" aria-pressed="false">Guitar</button>
+        <button type="button" data-action="quick" data-quick="bass" aria-pressed="false">Bass (bassless)</button>
+        <button type="button" data-action="quick" data-quick="drums" aria-pressed="false">Drums (drumless)</button>
+        <button type="button" data-action="quick" data-quick="piano" aria-pressed="false">Piano</button>
+        <button type="button" data-action="quick" data-quick="metal" aria-pressed="false">Heavy metal</button>
+        <button type="button" data-action="quick" data-quick="dead" aria-pressed="false">Grateful Dead</button>
+        <button type="button" data-action="quick" data-quick="twofive" aria-pressed="false">Jazz ii-V-I</button>
+        <button type="button" data-action="quick" data-quick="drones" aria-pressed="false">Drones</button>
+      </div>
+      <div class="filters">
+        <label class="field field-search">
+          <span>Search <kbd>/</kbd></span>
+          <input id="q" type="search" placeholder="Channel, style, key, progression, tag" autocomplete="off">
+        </label>
+        <label class="field">Practice instrument
+          <select id="practice"></select>
+        </label>
+        <label class="field">Style
+          <select id="style"></select>
+        </label>
+        <label class="field">Key
+          <select id="key"></select>
+        </label>
+        <label class="field">Tempo min
+          <input id="tempo-min" type="number" inputmode="numeric" min="1" max="400" placeholder="Any">
+        </label>
+        <label class="field">Tempo max
+          <input id="tempo-max" type="number" inputmode="numeric" min="1" max="400" placeholder="Any">
+        </label>
+        <label class="field">Progression
+          <select id="progression"></select>
+        </label>
+        <label class="field">Kind
+          <select id="kind"></select>
+        </label>
+        <label class="field">Channel
+          <select id="channel"></select>
+        </label>
+        <label class="field">Duration
+          <select id="duration">
+            <option value="All">All</option>
+            <option value="under-3">Under 3 min</option>
+            <option value="3-6">3–6 min</option>
+            <option value="6-10">6–10 min</option>
+            <option value="10-20">10–20 min</option>
+            <option value="over-20">Over 20 min</option>
+          </select>
+        </label>
+        <label class="field">Sort by
+          <select id="sort">
+            <option value="channel">Channel A–Z</option>
+            <option value="year">Year (oldest first)</option>
+            <option value="time">Running time (longest)</option>
+            <option value="tempo">Tempo (fastest)</option>
+          </select>
+        </label>
+        <label class="field review-toggle">
+          <input id="review" type="checkbox"> Include channels under review
+        </label>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <p class="status" id="status" aria-live="polite">Loading the catalog…</p>
+      <div class="toolbar-actions">
+        <button type="button" class="btn" data-action="prev">Previous</button>
+        <button type="button" class="btn" data-action="next">Next</button>
+        <button type="button" class="btn" data-action="expand" data-group-only>Expand all</button>
+        <button type="button" class="btn" data-action="collapse" data-group-only>Collapse all</button>
+        <button type="button" class="btn" data-action="clear">Clear filters</button>
+        <button type="button" class="btn" data-action="csv">Download this list</button>
+      </div>
+    </div>
+    <p id="facet-note" class="section-note" hidden></p>
+    <div id="results" tabindex="-1"></div>
+
+    <section class="discover" id="discover" aria-labelledby="discover-heading">
+      <div class="discover-head">
+        <h2 id="discover-heading">Discover</h2>
+        <button type="button" class="btn btn-primary" data-action="random">Random track</button>
+      </div>
+      <p class="section-note">Related tracks share a channel, style, progression, kind, or key.</p>
+      <div id="discover-body"></div>
+    </section>
+
+    <details class="fold">
+      <summary>
+        <span class="chev" aria-hidden="true">▸</span>
+        <span class="cross-title" id="channel-heading">Channels</span>
+        <span class="cross-count" id="channel-count"></span>
+      </summary>
+      <p class="section-note">Choose a channel name to fill the search. The number is how many tracks are on that channel.</p>
+      <div id="channel-list" class="chips"></div>
+    </details>
+    <details class="fold">
+      <summary>
+        <span class="chev" aria-hidden="true">▸</span>
+        <span class="cross-title" id="style-heading">Styles</span>
+        <span class="cross-count" id="style-count"></span>
+      </summary>
+      <p class="section-note">Choose a style to filter every view.</p>
+      <div id="style-list" class="chips"></div>
+    </details>
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Watch links open YouTube uploads. Those videos are not hosted here, and the uploads can change or be removed.</p>
+      <p><a href="data/catalog.csv" download>Download full spreadsheet</a> · <a href="https://github.com/mkpworks/backing-track-finder">Source and catalog data</a> · <a href="embed-demo.html">Embed this finder</a></p>
+    </div>
+  </footer>
+  <noscript>
+    <p class="wrap noscript">This finder needs JavaScript to search and filter the catalog.</p>
+  </noscript>
+  <script src="js/catalog.js"></script>
+  <script src="js/view.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
