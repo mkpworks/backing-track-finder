@@ -141,6 +141,19 @@ assert(Catalog.trainerUrl("aaaaaaaaaaa") === "https://ytmusictrainer.com/?video_
 assert(Catalog.fold("José") === "jose");
 assert(Catalog.labelOf("play-along", facetIndex.labels.kinds) === "Play-along");
 assert(Catalog.normProgression("II – V – I") === "ii-v-i");
+assert(Catalog.compareOptions("funk", "Triads") < 0, "Funk before Triads");
+assert(Catalog.compareOptions("8-bar blues", "12-bar blues") < 0, "8-bar before 12-bar");
+assert(Catalog.compareOptions("Band 2", "Band 10") < 0, "natural channel order");
+const sortedChoices = Catalog.sortOptions(["Triads", "Any", "funk", "All instruments", "12-bar blues", "8-bar blues"], (value) => Catalog.labelOf(value));
+assert(sortedChoices.join("|") === "Any|All instruments|8-bar blues|12-bar blues|funk|Triads", "placeholders stay first");
+const sortedFacets = Catalog.sortFacets({
+  styles: { Triads: 1, funk: 2, Jazz: 3 },
+  target_instruments: { guitar: 1, any: 4, cello: 2 },
+  practice_instruments: ["piano", "bass", "guitar"],
+});
+assert(Object.keys(sortedFacets.styles).join(",") === "funk,Jazz,Triads", "facet style keys");
+assert(Object.keys(sortedFacets.target_instruments).join(",") === "any,cello,guitar", "any stays first");
+assert(sortedFacets.practice_instruments.join(",") === "bass,guitar,piano", "facet lists sort");
 
 const alpha = track({
   id: "aaaaaaaaaaa",
@@ -437,6 +450,97 @@ for (const hostname of ["", "localhost", "example.com", "notytmusictrainer.com",
 }
 assert(anchors(offSite, "trainer").every((link) => link.href === Catalog.trainerUrl("aaaaaaaaaaa")), "trainer href");
 
+function optionLabels(html) {
+  const labels = [];
+  const re = /<option\b[^>]*>([^<]*)<\/option>/g;
+  let match;
+  while ((match = re.exec(html || ""))) {
+    labels.push(match[1].replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+  }
+  return labels;
+}
+
+function assertAlphaLabels(labels, message) {
+  assert(labels[0] === "All", message + " keeps All first");
+  const rest = labels.slice(1);
+  const sorted = rest.slice().sort((a, b) => Catalog.compareOptions(a, b));
+  assert(rest.join("\n") === sorted.join("\n"), message + " alphabetical");
+}
+
+function mountedSelects(mountOptions) {
+  return withPage("example.com", "https://example.com/", () => {
+    const nodes = new Map();
+    function el() {
+      return {
+        value: "",
+        hidden: false,
+        disabled: false,
+        textContent: "",
+        innerHTML: "",
+        classList: { add() {}, contains() { return false; } },
+        setAttribute() {},
+        getAttribute() { return null; },
+        addEventListener() {},
+        focus() {},
+        scrollIntoView() {},
+      };
+    }
+    const host = {
+      activeElement: null,
+      getElementById(id) {
+        if (!nodes.has(id)) nodes.set(id, el());
+        return nodes.get(id);
+      },
+      querySelectorAll() { return []; },
+      addEventListener() {},
+    };
+    const view = FinderView.mount(host, Object.assign({
+      themeTarget: { getAttribute() { return "dark"; }, setAttribute() {} },
+      persistTheme: false,
+    }, mountOptions));
+    return { nodes, view };
+  });
+}
+
+const menu = mountedSelects({
+  tracks: [
+    track({ id: "ddddddddddd", channel: "Band 10", channel_id: channelId("d"), styles: ["Triads"], progression: "12-bar blues", kind: "looper", key: "Bb", target_instruments: ["piano"] }),
+    track({ id: "eeeeeeeeeee", channel: "Band 2", channel_id: channelId("e"), styles: ["funk"], progression: "8-bar blues", kind: "drone", key: "C", target_instruments: ["guitar"] }),
+  ],
+  facets: {
+    styles: ["Triads", "funk", "Jazz"],
+    progressions: ["12-bar blues", "Triads", "8-bar blues", "ii-V-I"],
+    kinds: ["play-along", "backing track", "looper", "drone"],
+    keys: ["Bb", "C", "A minor"],
+    practice_instruments: ["piano", "guitar", "bass"],
+    target_instruments: { any: 1, guitar: 1, piano: 1, cello: 1 },
+  },
+});
+assertAlphaLabels(optionLabels(menu.nodes.get("style").innerHTML), "style menu");
+assert(optionLabels(menu.nodes.get("style").innerHTML).slice(1).join("|") === "Funk|Jazz|Triads", "Funk before Triads in the style menu");
+assertAlphaLabels(optionLabels(menu.nodes.get("progression").innerHTML), "progression menu");
+assert(optionLabels(menu.nodes.get("progression").innerHTML).slice(1).join("|") === "8-bar Blues|12-bar Blues|ii-V-I|Triads", "progression numeric order");
+assert(optionLabels(menu.nodes.get("kind").innerHTML).join("|") === "All|Backing track|Drone|Looper|Play-along", "kind menu");
+assert(optionLabels(menu.nodes.get("practice").innerHTML).join("|") === "All|Bass|Cello|Guitar|Piano/Keys", "practice menu");
+assert(optionLabels(menu.nodes.get("key").innerHTML).join("|") === "All|A minor|Bb|C", "key menu");
+assert(optionLabels(menu.nodes.get("channel").innerHTML).join("|") === "All|Band 2 · 1|Band 10 · 1", "channel menu");
+assert(optionLabels(menu.nodes.get("duration").innerHTML).join("|") === "All|Under 3 min|3–6 min|6–10 min|10–20 min|Over 20 min", "duration stays in length order");
+menu.view.addTracks([track({
+  id: "fffffffffff",
+  channel: "Alpha",
+  channel_id: channelId("f"),
+  styles: ["Ambient"],
+  progression: "custom vamp",
+  kind: "backing track",
+  key: "G",
+})]);
+menu.view.setPending(false);
+assert(optionLabels(menu.nodes.get("style").innerHTML).slice(1).join("|") === "Ambient|Funk|Jazz|Triads", "new styles sort at render");
+assert(optionLabels(menu.nodes.get("key").innerHTML).slice(1).join("|") === "A minor|Bb|C|G", "new keys sort at render");
+assert(optionLabels(menu.nodes.get("channel").innerHTML).slice(1)[0] === "Alpha · 1", "new channels sort at render");
+assert(/<option value="channel">Channel A–Z<\/option><option value="year">Year \(oldest first\)<\/option><option value="time">Running time \(longest\)<\/option><option value="tempo">Tempo \(fastest\)<\/option>/.test(shell), "sort menu stays put");
+assert(/<option value="under-3">Under 3 min<\/option>\s*<option value="3-6">3–6 min<\/option>\s*<option value="6-10">6–10 min<\/option>\s*<option value="10-20">10–20 min<\/option>\s*<option value="over-20">Over 20 min<\/option>/.test(html), "duration markup stays in length order");
+
 function anchorTag(markup, href) {
   const needle = 'href="' + href.replace(/&/g, "&amp;") + '"';
   const at = markup.indexOf(needle);
@@ -525,6 +629,10 @@ assert(catalogFile.review_channel_ids.length === 14, "review channel ids");
 const unpackedBuild = Catalog.unpackCatalog(catalogFile);
 assert(unpackedBuild.lazy === true && unpackedBuild.tracks.length === 0 && unpackedBuild.total === 82021, "lazy catalog");
 assert(catalogFile.facets.styles["heavy metal"] === 4160, "built facets");
+for (const group of ["styles", "key", "progression", "kind", "scale", "tags", "omitted_instruments", "target_instruments"]) {
+  const keys = Object.keys(catalogFile.facets[group] || {});
+  assert(keys.join("\n") === Catalog.sortOptions(keys).join("\n"), "built facet order " + group);
+}
 assert(fs.existsSync(path.join(built, "shards", catalogFile.shards[0].slug + ".json")), "shard file is written");
 
 const embedOut = path.join(built, "embed.js");

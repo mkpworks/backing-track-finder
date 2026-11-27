@@ -98,7 +98,7 @@ Clicking a channel name fills the search. Clicking a style sets the style filter
 }
 ```
 
-`kind` and `omitted_instruments` are closed sets. `target_instruments` accepts the instrument names in the schema, including `any`. `styles`, `progressions`, and `keys` are open strings. `facets.json` lists the values that get a menu entry, in count order. A rarer progression still matches search and can be selected from a track chip.
+`kind` and `omitted_instruments` are closed sets. `target_instruments` accepts the instrument names in the schema, including `any`. `styles`, `progressions`, and `keys` are open strings. `facets.json` lists the values that get a menu entry, in count order. The catalog build stores those keys A–Z, and the page sorts each menu the same way when it draws, so a value added later still lands in order. Comparison is case-insensitive and numeric (`8-bar` before `12-bar`). `All`, `Any`, and `All instruments` stay first. Duration buckets and the Sort by menu stay in their fixed order. Key names in this catalog are frequency order, not circle-of-fifths order, so the key menu is alphabetical too. A rarer progression still matches search and can be selected from a track chip.
 
 ## Sharding
 

@@ -65,6 +65,57 @@
     return String(a).localeCompare(String(b), undefined, { sensitivity: "base" });
   }
 
+  // Menu labels: case-insensitive, and "8-bar" before "12-bar". "funk" sorts before "Triads".
+  function compareOptions(a, b) {
+    return String(a == null ? "" : a).localeCompare(String(b == null ? "" : b), undefined, {
+      sensitivity: "base",
+      numeric: true,
+    });
+  }
+
+  function optionLabel(value, labeler) {
+    if (typeof labeler === "function") {
+      const label = labeler(value);
+      if (label != null && String(label).trim()) return String(label);
+    }
+    return String(value == null ? "" : value);
+  }
+
+  function isPlaceholderOption(text) {
+    const folded = fold(text).trim();
+    return folded === "all" || folded === "any" || folded === "all instruments";
+  }
+
+  function sortOptions(values, labeler) {
+    const placeholders = [];
+    const rest = [];
+    for (const value of values || []) {
+      const label = optionLabel(value, labeler);
+      if (isPlaceholderOption(label) || isPlaceholderOption(value)) placeholders.push(value);
+      else rest.push(value);
+    }
+    rest.sort((a, b) => compareOptions(optionLabel(a, labeler), optionLabel(b, labeler)) || compareOptions(a, b));
+    return placeholders.concat(rest);
+  }
+
+  function sortFacets(facets) {
+    if (!facets || typeof facets !== "object" || Array.isArray(facets)) return facets || {};
+    const out = {};
+    for (const group of Object.keys(facets)) {
+      const value = facets[group];
+      if (Array.isArray(value)) {
+        out[group] = sortOptions(value);
+      } else if (value && typeof value === "object") {
+        const sorted = {};
+        for (const key of sortOptions(Object.keys(value))) sorted[key] = value[key];
+        out[group] = sorted;
+      } else {
+        out[group] = value;
+      }
+    }
+    return out;
+  }
+
   function fold(value) {
     return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   }
@@ -901,6 +952,9 @@
     CSV_HEADERS,
     FILTER_KEYS,
     compareNames,
+    compareOptions,
+    sortOptions,
+    sortFacets,
     fold,
     slugify,
     isSlug,

@@ -14,7 +14,7 @@ function buildCatalogObject(tracks, facets, generatedAt, options) {
     generated_at: generatedAt,
     packing: "rows",
     sample: Boolean(options && options.sample),
-    facets: facets || {},
+    facets: Catalog.sortFacets(facets || {}),
     channels: packed.channels,
     omitted: packed.omitted,
     targets: packed.targets,
