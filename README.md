@@ -78,7 +78,7 @@ Quick chips sit above the dropdowns:
 | Jazz ii-V-I | style `jazz` and progression `ii-V-I` |
 | Drones | kind `drone` |
 
-Style, key, progression, and kind come from the data. Tempo is a min/max range in BPM; a track with no tempo drops out of a range. Duration buckets are under 3 minutes, 3–6, 6–10, 10–20, and over 20.
+Style, key, progression, and kind come from the data. Practice instrument, style, key, progression, kind, and channel menus are alphabetical (case-insensitive, so Funk comes before Triads, and numeric, so 8-bar comes before 12-bar). `All`, `Any`, and `All instruments` stay first. Tempo is a min/max range in BPM; a track with no tempo drops out of a range. Duration buckets stay in length order: under 3 minutes, 3–6, 6–10, 10–20, and over 20. The Sort by menu stays in its listed order.
 
 Channels and the tracks inside a channel are paged 12 at a time.
 

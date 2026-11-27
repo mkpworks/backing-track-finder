@@ -288,9 +288,13 @@
     function fillSelect(id, values, labeler, titleFor) {
       const select = byId(id);
       if (!select) return;
+      const labelFor = labeler || ((value) => value);
+      // Duration buckets stay short-to-long. The sort menu is static HTML.
+      const ordered = id === "duration" ? values : Catalog.sortOptions(values, labelFor);
       const choices = ['<option value="All">All</option>'];
-      for (const value of values) {
-        const label = labeler ? labeler(value) : value;
+      for (const value of ordered) {
+        const label = labelFor(value);
+        if (Catalog.fold(value) === "all" || Catalog.fold(label) === "all") continue;
         const title = titleFor ? titleFor(value) : "";
         const titleAttr = title ? ' title="' + esc(title) + '"' : "";
         choices.push('<option value="' + esc(value) + '"' + titleAttr + ">" + esc(label) + "</option>");
@@ -589,7 +593,10 @@
     function refillSelects() {
       const channelSelect = byId("channel");
       if (channelSelect) {
-        channelSelect.innerHTML = '<option value="All">All</option>' + listedChannels().map((channel) => {
+        const channels = listedChannels().slice().sort((a, b) =>
+          Catalog.compareOptions(a.channel, b.channel) || Catalog.compareOptions(a.channel_id, b.channel_id)
+        );
+        channelSelect.innerHTML = '<option value="All">All</option>' + channels.map((channel) => {
           const count = index.channelCount[channel.channel_id] || 0;
           return '<option value="' + esc(channel.channel_id) + '">' + esc(channel.channel) + " · " + count + "</option>";
         }).join("");
